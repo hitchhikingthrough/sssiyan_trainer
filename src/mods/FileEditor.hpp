@@ -301,7 +301,7 @@ private:
     std::vector<std::wstring> m_nero_portraits;
     std::vector<std::wstring> m_gilver_portraits;
     std::vector<std::wstring> m_vergil_portraits;
-    std::optional<std::wstring> __fastcall portraitRemapper(const wchar_t* file_path, std::vector<std::wstring> portraits, std::optional<std::vector<std::shared_ptr<Asset_Hotswap>>> swaps);
+    std::optional<std::wstring> __fastcall portraitRemapper(const wchar_t* file_path, std::optional<std::vector<std::shared_ptr<Asset_Hotswap>>> swaps);
 
     void asset_swap_ui(std::optional<std::vector<std::shared_ptr<Asset_Hotswap>>>& hot_swaps);
     void costume_swap_ui(std::optional<std::vector<std::shared_ptr<Asset_Hotswap>>>& costume_swaps);

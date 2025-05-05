@@ -276,10 +276,10 @@ FileEditor::FileEditor()
     m_gilver_swaps{ {} }, 
     m_vergil_swaps{ {} }, 
     m_show_costume_options{ false }, 
-    m_nero_portraits{ L"UI/GUI/ui2100/tex/ui2100_N1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N6_iam.tex" },
-    m_dante_portraits{ L"UI/GUI/ui2100/tex/ui2100_D1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D6_iam.tex" },
-    m_gilver_portraits{ L"UI/GUI/ui2100/tex/ui2100_G1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G6_iam.tex" },
-    m_vergil_portraits{ L"UI/GUI/ui2100/tex/ui2100_V1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V6_iam.tex" }
+    m_nero_portraits{ /*L"UI/GUI/ui2100/tex/ui2100_N1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_N6_iam.tex" */},
+    m_dante_portraits{ /*L"UI/GUI/ui2100/tex/ui2100_D1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_D6_iam.tex"*/ },
+    m_gilver_portraits{ /*L"UI/GUI/ui2100/tex/ui2100_G1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_G6_iam.tex" */ },
+    m_vergil_portraits{ /*L"UI/GUI/ui2100/tex/ui2100_V1_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V2_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V3_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V4_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V5_iam.tex",L"UI/GUI/ui2100/tex/ui2100_V6_iam.tex" */ }
 {
 	g_FileEditor = this;
     m_costume_list_size_addr = (uintptr_t)&get_costume_list_size;
@@ -1090,28 +1090,75 @@ void __fastcall FileEditor::costume_list_maker_internal(uintptr_t RCX, uintptr_t
 }
 
 
+/// <summary>
+/// Portrait remapper: 
+/// What we are doing here is a temporary fix for allowing a custom portrait to be loaded in place of the default expanded portrait files.
+/// when the game tries to load an expanded costume slot (ui2100_D1, D2 etc) 
+/// This function will check to see if there are extra costumes for the character in question loaded.
+/// If so, it should then attempt to replace the file path with the file path of the costume's custom portrait, if it exists
+/// </summary>
+/// <param name="file_path">File path of the additional portrait</param>
+/// <param name="swaps">the additional costumes for the character in question</param>
+/// <returns></returns>
+std::optional<std::wstring> __fastcall FileEditor::portraitRemapper(const wchar_t* file_path, std::optional<std::vector<std::shared_ptr<FileEditor::Asset_Hotswap>>> swaps) {
+    
+    //Hitch rewrite from the year 2025.
+    const wchar_t* portraitindexes = L"123456";
+    int swap_index = -1;
+    if (file_path[58] == portraitindexes[0]) {
+        swap_index = 0;
+    };
+    if (file_path[58] == portraitindexes[1]) {
+        swap_index = 1;
+    };
+    if (file_path[58] == portraitindexes[2]) {
+        swap_index = 2;
+    };
+    if (file_path[58] == portraitindexes[3]) {
+        swap_index = 3;
+    };
+    if (file_path[58] == portraitindexes[4]) {
+        swap_index = 4;
+    };
+    if (file_path[58] == portraitindexes[5]) {
+        swap_index = 5;
+    };
 
-std::optional<std::wstring> __fastcall FileEditor::portraitRemapper(const wchar_t* file_path, std::vector<std::wstring> portraits, std::optional<std::vector<std::shared_ptr<FileEditor::Asset_Hotswap>>> swaps) {
-    for (int i = 0; i < portraits.size(); i++) {
-        //if we have dante swaps
-        if (asset_check(portraits[i].c_str(), file_path)) {
-            if (swaps) {
-                //if we have enough dante swaps to justify the 
-                if (swaps.value().size() > i) {
-                    //get the files swapped in the vergil path
-                    for (auto& mod_replace_paths : swaps.value()[i]->redirection_list) {
-                        //if there is a file path for a custom portrait (as shown here) then
-                        if (asset_check(mod_replace_paths.org_path.c_str(), L"UI/GUI/ui2100/tex/ui2100_PT_iam.tex")) {
-                            spdlog::info("Found Portrait info.");
-                            //replace the v1 portrait with the custom portrait
-                            return std::make_optional(mod_replace_paths.new_path);
-                            //spdlog::info(mod_replace_paths.new_path);
-                        }
-                    }
-                }
+    if (swap_index == -1) return std::nullopt;
+
+    if (swaps.value().size() > swap_index) {
+        for (auto& mod_replace_paths : swaps.value()[swap_index]->redirection_list)
+        {
+            //if there is a file path for a custom portrait (as shown here) then
+            if (asset_check(mod_replace_paths.org_path.c_str(), L"UI/GUI/ui2100/tex/ui2100_PT_iam.tex")) {
+                spdlog::info("Found Portrait info.");
+                //replace the v1 portrait with the custom portrait
+                return std::make_optional(mod_replace_paths.new_path);
+                //spdlog::info(mod_replace_paths.new_path);
             }
         }
-    }
+    };
+
+    //for (int i = 0; i < portraits.size(); i++) {
+    //    //if we have dante swaps
+    //    if (asset_check(portraits[i].c_str(), file_path)) {
+    //        if (swaps) {
+    //            //if we have enough dante swaps to justify the 
+    //            if (swaps.value().size() > i) {
+    //                //get the files swapped in the vergil path
+    //                for (auto& mod_replace_paths : swaps.value()[i]->redirection_list) {
+    //                    //if there is a file path for a custom portrait (as shown here) then
+    //                    if (asset_check(mod_replace_paths.org_path.c_str(), L"UI/GUI/ui2100/tex/ui2100_PT_iam.tex")) {
+    //                        spdlog::info("Found Portrait info.");
+    //                        //replace the v1 portrait with the custom portrait
+    //                        return std::make_optional(mod_replace_paths.new_path);
+    //                        //spdlog::info(mod_replace_paths.new_path);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
     return std::nullopt;
 }
 
@@ -1148,26 +1195,26 @@ void* __fastcall FileEditor::file_loader(uintptr_t this_p, uintptr_t RDX, const 
         }
     }; _mod();
     //Why could the filepath not just be adjusted inside the const why is it like this
-    if (asset_check(L"UI/GUI/ui2100/tex/ui2100_N", file_path)) {
-        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_nero_portraits, m_nero_swaps);
+    if (asset_check(L"Mods/modded2100full/natives/x64/ui/gui/ui2100/tex/ui2100_N", file_path)) {
+        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_nero_swaps);
         if (portraitfile.has_value()) {
             file_path = portraitfile.value().c_str();
         }
     }
-    if (asset_check(L"UI/GUI/ui2100/tex/ui2100_D", file_path)) {
-        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_dante_portraits, m_dante_swaps);
+    if (asset_check(L"Mods/modded2100full/natives/x64/ui/gui/ui2100/tex/ui2100_D", file_path)) {
+        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_dante_swaps);
         if (portraitfile.has_value()) {
             file_path = portraitfile.value().c_str();
         }
     }
-    if (asset_check(L"UI/GUI/ui2100/tex/ui2100_G", file_path)) {
-        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_gilver_portraits, m_gilver_swaps);
+    if (asset_check(L"Mods/modded2100full/natives/x64/ui/gui/ui2100/tex/ui2100_G", file_path)) {
+        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_gilver_swaps);
         if (portraitfile.has_value()) {
             file_path = portraitfile.value().c_str();
         }
     }
-    if (asset_check(L"UI/GUI/ui2100/tex/ui2100_V", file_path)) {
-        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_vergil_portraits, m_vergil_swaps);
+    if (asset_check(L"Mods/modded2100full/natives/x64/ui/gui/ui2100/tex/ui2100_V", file_path)) {
+        std::optional<std::wstring> portraitfile = portraitRemapper(file_path, m_vergil_swaps);
         if (portraitfile.has_value()) {
             file_path = portraitfile.value().c_str();
         }
