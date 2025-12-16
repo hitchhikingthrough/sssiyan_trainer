@@ -123,6 +123,8 @@ local is_jc_interrupt = false
 
 local beowulf_exception = false
 
+keyboard_swap = -1
+
 local function pre_judgementCutCancel(args)
 	doppelganger = sdk.to_managed_object(args[2])
 	log.info("got doppel")
@@ -187,6 +189,17 @@ function updateDoppelWeapon(vergil)
 	doppel:call("setSlotWeaponS(app.PlayerVergilPL.WeaponS, System.Boolean)",vergil_weaponS,false)
 end
 
+function keyboardUpdateDoppelWeapon(vergil)
+	if not vergil then return end
+	local doppel = vergil:call("get_cachedDoppel()")
+	local vergil_weaponS = doppel:call("get_currentWeaponS()")
+	vergil_weaponS = vergil_weaponS + 1
+	if vergil_weaponS > 2 then
+		vergil_weaponS = 0
+	end
+	doppel:call("setSlotWeaponS(app.PlayerVergilPL.WeaponS, System.Boolean)",vergil_weaponS,false)
+end
+
 local function pre_vergil_setupDoppelMode(args)
 	local vergil = sdk.to_managed_object(args[2])
 	updateDoppelWeapon(vergil)
@@ -212,10 +225,10 @@ end
 
 local function pre_vergil_updateWeaponChange(args)
 	local vergil_character = sdk.to_managed_object(args[2])
-	log.info("got vergil?")
+	--log.info("got vergil?")
 	if vergil_character:get_field("IsDoppel") == true then
 		vergil_character:call("get_padInput()"):call("clearButton(System.UInt32)",0x2000)
-		log.info("Try to skip")
+		--log.info("Try to skip")
 		--return sdk.PreHookResult.SKIP_ORIGINAL 
 	end
 end
@@ -254,7 +267,7 @@ end
 
 function vergil_updateDoppelDelayChange.post(retval)
 	return retval
-end
+end 
 
 
 sdk.hook(vergil_setupDoppelMode_method,pre_vergil_setupDoppelMode,post_vergil_setupDoppelMode)
@@ -273,22 +286,26 @@ local function create_doppel_resource()
 end
 
 re.on_draw_ui(function()
-	weapchange,weapvalue = imgui.slider_int("Weapon to swap to", weapon_value, 0, 2)
-	if weapchange then
-		weapon_value = weapvalue
-	end
+	--weapchange,weapvalue = imgui.slider_int("Weapon to swap to", weapon_value, 0, 2)
+	--if weapchange then
+	--	weapon_value = weapvalue
+	--end
 	--if imgui.button("create resource") then
 	--	create_doppel_resource()
 	--end
-	if imgui.button("Set weapon test") then
-		local vergil = get_currentplayer()
-			vergil:call("setSlotWeaponS(app.PlayerVergilPL.WeaponS, System.Boolean)",weapon_value,false)
-	end
+	-- if imgui.button("Set weapon test") then
+		-- local vergil = get_currentplayer()
+			-- vergil:call("setSlotWeaponS(app.PlayerVergilPL.WeaponS, System.Boolean)",weapon_value,false)
+	-- end
 end)
 
 re.on_pre_application_entry("UpdateBehavior", function()
-	if not doppelganger then return end
-
+	if keyboard_swap == 0 then
+		log.info("keyboard swap trigger")
+		local vergil = get_currentplayer()
+		keyboardUpdateDoppelWeapon(vergil)
+		keyboard_swap = -1
+	end
 end)
 
 sdk.hook(vergil_judgement_cut_cancel_method,pre_judgementCutCancel,post_judgementCutCancel)

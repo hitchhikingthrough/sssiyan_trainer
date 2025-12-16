@@ -14,6 +14,7 @@ public:
 	void on_load_lua_mod() override;
 	void on_unload_lua_mod() override;
 	void on_lua_mod_update() override;
+	int keyboard_swap = -1;
 
 	static naked void init_detour_1();
 	static naked void init_detour_2();

@@ -52,6 +52,13 @@ std::optional<std::string> LuaDoppelWeaponSwitcher::on_initialize() {
     install_new_detour(addr_2.value(), m_init_hook_2, &init_detour_2, &jmp_ret_2, 7);
     set_up_hotkey();
     verify_scripts();
+    g_keyBinds.Get()->AddBind(std::string(get_name()) + "doppelkeyboardswap",
+        [this]() {
+            //if (PlayerTracker::ingameplay && PlayerTracker::playerid == 0) {
+            keyboard_swap = 0;
+            //}
+
+        }, OnState_Press);
     return Mod::on_initialize();
 }
 
@@ -71,6 +78,8 @@ void LuaDoppelWeaponSwitcher::on_lua_mod_update()
 {
     API::LuaLock _{};
     sol::state_view mod_state_view{ m_mod_state };
+    mod_state_view["keyboard_swap"] = keyboard_swap;
+    keyboard_swap = -1;
     //lua actions on update here
 }
 
@@ -78,6 +87,9 @@ void LuaDoppelWeaponSwitcher::on_lua_mod_update()
 
 void LuaDoppelWeaponSwitcher::on_draw_ui()
 {
+    ImGui::Text("Keyboard change weapon button");
+    ImGui::SameLine();
+    UI::KeyBindButton(std::string(get_name()) + "doppelkeyboardswap", std::string(get_name()) + "doppelkeyboardswap", g_framework->get_kcw_buffers(), 1.0f, true, UI::BUTTONCOLOR);
     draw_lua_ui();
 }
 
